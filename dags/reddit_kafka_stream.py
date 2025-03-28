@@ -24,39 +24,44 @@ def init_reddit_client():
         user_agent=os.getenv("REDDIT_USER_AGENT")
     )
 
-def get_comments_text(submission):
+def get_top_comments(submission, top_n=5):
     """
-    Retrieve and aggregate text from all comments of a submission.
+    Retrieve the top N comments from a submission based on comment score.
+    Returns a list of comment bodies.
     """
-    # Replace "more comments" objects and flatten the comment tree
     submission.comments.replace_more(limit=0)
-    comments = submission.comments.list()
-    # Join comment bodies into a single text block
-    return " ".join(comment.body for comment in comments if hasattr(comment, 'body'))
-
+    all_comments = submission.comments.list()
+    sorted_comments = sorted(
+        all_comments,
+        key=lambda comment: comment.score if hasattr(comment, 'score') else 0,
+        reverse=True
+    )
+    top_comments = sorted_comments[:top_n]
+    return [comment.body for comment in top_comments if hasattr(comment, 'body')]
 
 def get_reddit_data(reddit, subreddits, limit=1):
     """
-    Retrieve a fixed number of past submissions from the specified subreddits.
-    Here, we use the .new() method to get historical (previous) posts.
+    Retrieve submissions from the specified subreddits using the stream API.
+    If selftext is empty or very short, fetch the top 5 comments separately.
+    The function collects submissions until the specified limit is reached.
     """
-    submissions = reddit.subreddit(subreddits).new(limit=limit)
+    submissions = reddit.subreddit(subreddits).stream.submissions(skip_existing=False)
     results = []
     for submission in submissions:
-        text = f"{submission.title or ''}\n{submission.selftext or ''}"
-
-        # If selftext is empty or very short, fetch comments for additional text
+        # Combine title and selftext
+        text = f"{submission.title or ''}\n{submission.selftext or ''}".strip()
+        
+        # If selftext is empty or very short, retrieve top 5 comments (kept separate)
         if not submission.selftext or len(submission.selftext) < 200:
-            comments_text = get_comments_text(submission)
-            text = f"{submission.title or ''}\n{comments_text}".strip()
+            top_comments = get_top_comments(submission, top_n=5)
         else:
-            comments_text = ""  # Optional: you can store comments separately if needed
+            top_comments = []
         
         data = {
             "id": submission.id,
             "title": submission.title,
             "selftext": submission.selftext,
-            "comment": comments_text,
+            "top_comments": top_comments,  # List of separate comment bodies
             "subreddit": submission.subreddit.display_name,
             "created_utc": submission.created_utc,
             "score": submission.score,
@@ -68,19 +73,23 @@ def get_reddit_data(reddit, subreddits, limit=1):
             "text_length": len(text)
         }
         results.append(data)
+        if len(results) >= limit:
+            break
     return results
 
 def fetch_reddit_data(**kwargs):
     """
-    Initializes the Reddit client, retrieves historical submissions from the
-    'technology' subreddit, and writes the results to a JSON file.
+    Initializes the Reddit client, retrieves submissions from the specified subreddit(s)
+    using the stream API, and prints the results as JSON.
     """
     reddit = init_reddit_client()
-    subreddits = "chatgpt"  # Modify if needed or expand to multiple subreddits
-    results = get_reddit_data(reddit, subreddits, limit=1)
+    subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
+    results = get_reddit_data(reddit, subreddits, limit=5)
     
+    # Print the results as a formatted JSON string
     print(json.dumps(results, indent=3))
-    
+    return results
+
 # with DAG(
 #     dag_id='reddit_data_ingestion',
 #     default_args=default_args,
@@ -94,5 +103,6 @@ def fetch_reddit_data(**kwargs):
 #         provide_context=True,
 #     )
 
-
-fetch_reddit_data()
+# For local testing, you can run:
+if __name__ == "__main__":
+    fetch_reddit_data()
