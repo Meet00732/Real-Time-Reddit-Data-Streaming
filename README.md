@@ -1,1 +1,1 @@
-# Real-Time-Twitter-Sentiment-Analysis
+# Real-Time-Reddit-Data-Streaming
