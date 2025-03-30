@@ -20,23 +20,27 @@ jobs:
           aws-region: us-east-1
 
       - name: Verify Secrets Are Set
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
         run: |
-          if [ -z "${{ secrets.REDDIT_CLIENT_ID }}" ]; then
+          if [ -z "$REDDIT_CLIENT_ID" ]; then
             echo "REDDIT_CLIENT_ID is not set"
           else
-            echo "REDDIT_CLIENT_ID is set and has length ${#{{ secrets.REDDIT_CLIENT_ID }}}"
+            echo "REDDIT_CLIENT_ID is set and has length ${#REDDIT_CLIENT_ID}"
           fi
 
-          if [ -z "${{ secrets.REDDIT_CLIENT_SECRET }}" ]; then
+          if [ -z "$REDDIT_CLIENT_SECRET" ]; then
             echo "REDDIT_CLIENT_SECRET is not set"
           else
-            echo "REDDIT_CLIENT_SECRET is set and has length ${#{{ secrets.REDDIT_CLIENT_SECRET }}}"
+            echo "REDDIT_CLIENT_SECRET is set and has length ${#REDDIT_CLIENT_SECRET}"
           fi
 
-          if [ -z "${{ secrets.REDDIT_USER_AGENT }}" ]; then
+          if [ -z "$REDDIT_USER_AGENT" ]; then
             echo "REDDIT_USER_AGENT is not set"
           else
-            echo "REDDIT_USER_AGENT is set and has length ${#{{ secrets.REDDIT_USER_AGENT }}}"
+            echo "REDDIT_USER_AGENT is set and has length ${#REDDIT_USER_AGENT}"
           fi
 
 
