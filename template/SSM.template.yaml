@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "SSM Parameter Store Template for Reddit Credentials"
+Description: "Secrets Manager Template for Reddit Credentials"
 
 Parameters:
   RedditClientId:
@@ -15,36 +15,36 @@ Parameters:
     Description: "The Reddit User Agent"
 
 Resources:
-  RedditClientIdParameter:
-    Type: AWS::SSM::Parameter
+  RedditClientIdSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      Name: REDDIT_CLIENT_ID
-      Type: "SecureString"
-      Value: !Ref RedditClientId
+      Name: redditstream-REDDIT_CLIENT_ID
+      Description: "Reddit Client ID"
+      SecretString: !Ref RedditClientId
 
-  RedditClientSecretParameter:
-    Type: AWS::SSM::Parameter
+  RedditClientSecretSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      Name: REDDIT_CLIENT_SECRET
-      Type: "SecureString"
-      Value: !Ref RedditClientSecret
+      Name: redditstream-REDDIT_CLIENT_SECRET
+      Description: "Reddit Client Secret"
+      SecretString: !Ref RedditClientSecret
 
-  RedditUserAgentParameter:
-    Type: AWS::SSM::Parameter
+  RedditUserAgentSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      Name: REDDIT_USER_AGENT
-      Type: "SecureString"
-      Value: !Ref RedditUserAgent
+      Name: redditstream-REDDIT_USER_AGENT
+      Description: "Reddit User Agent"
+      SecretString: !Ref RedditUserAgent
 
 Outputs:
   RedditClientIdOutput:
-    Description: "The SSM parameter name for Reddit Client ID"
-    Value: REDDIT_CLIENT_ID
+    Description: "The name of the Secrets Manager secret for Reddit Client ID"
+    Value: redditstream-REDDIT_CLIENT_ID
 
   RedditClientSecretOutput:
-    Description: "The SSM parameter name for Reddit Client Secret"
-    Value: REDDIT_CLIENT_SECRET
+    Description: "The name of the Secrets Manager secret for Reddit Client Secret"
+    Value: redditstream-REDDIT_CLIENT_SECRET
 
   RedditUserAgentOutput:
-    Description: "The SSM parameter name for Reddit User Agent"
-    Value: REDDIT_USER_AGENT
+    Description: "The name of the Secrets Manager secret for Reddit User Agent"
+    Value: redditstream-REDDIT_USER_AGENT
