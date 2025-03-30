@@ -22,7 +22,7 @@ jobs:
       - name: Deploy CloudFormation Stack for SSM Parameters
         run: |
           aws cloudformation deploy \
-            --stack-name reddit-ssm-stack \
+            --stack-name reddit-ssm-stack-v2 \
             --template-file template/SSM.template.yaml \
             --parameter-overrides "RedditClientId=${{ secrets.REDDIT_CLIENT_ID }}" "RedditClientSecret=${{ secrets.REDDIT_CLIENT_SECRET }}" "RedditUserAgent=${{ secrets.REDDIT_USER_AGENT }}" \
             --capabilities CAPABILITY_NAMED_IAM
