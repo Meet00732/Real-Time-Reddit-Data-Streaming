@@ -23,6 +23,6 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name reddit-ssm-stack \
-            --template-file SSM.template.yaml \
+            --template-file template/SSM.template.yaml \
             --parameter-overrides "RedditClientId=${{ secrets.REDDIT_CLIENT_ID }}" "RedditClientSecret=${{ secrets.REDDIT_CLIENT_SECRET }}" "RedditUserAgent=${{ secrets.REDDIT_USER_AGENT }}" \
             --capabilities CAPABILITY_NAMED_IAM
