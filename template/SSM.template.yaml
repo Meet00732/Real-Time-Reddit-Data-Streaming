@@ -18,33 +18,33 @@ Resources:
   RedditClientIdParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /redditstream/REDDIT_CLIENT_ID
-      Type: SecureString
+      Name: REDDIT_CLIENT_ID
+      Type: "SecureString"
       Value: !Ref RedditClientId
 
   RedditClientSecretParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /redditstream/REDDIT_CLIENT_SECRET
-      Type: SecureString
+      Name: REDDIT_CLIENT_SECRET
+      Type: "SecureString"
       Value: !Ref RedditClientSecret
 
   RedditUserAgentParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /redditstream/REDDIT_USER_AGENT
-      Type: SecureString
+      Name: REDDIT_USER_AGENT
+      Type: "SecureString"
       Value: !Ref RedditUserAgent
 
 Outputs:
   RedditClientIdOutput:
     Description: "The SSM parameter name for Reddit Client ID"
-    Value: /redditstream/REDDIT_CLIENT_ID
+    Value: REDDIT_CLIENT_ID
 
   RedditClientSecretOutput:
     Description: "The SSM parameter name for Reddit Client Secret"
-    Value: /redditstream/REDDIT_CLIENT_SECRET
+    Value: REDDIT_CLIENT_SECRET
 
   RedditUserAgentOutput:
     Description: "The SSM parameter name for Reddit User Agent"
-    Value: /redditstream/REDDIT_USER_AGENT
+    Value: REDDIT_USER_AGENT
