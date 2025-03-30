@@ -19,21 +19,21 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /redditstream/REDDIT_CLIENT_ID
-      Type: String
+      Type: SecureString
       Value: !Ref RedditClientId
 
   RedditClientSecretParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /redditstream/REDDIT_CLIENT_SECRET
-      Type: String
+      Type: SecureString
       Value: !Ref RedditClientSecret
 
   RedditUserAgentParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /redditstream/REDDIT_USER_AGENT
-      Type: String
+      Type: SecureString
       Value: !Ref RedditUserAgent
 
 Outputs:

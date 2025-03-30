@@ -19,35 +19,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Verify Secrets Are Set
-        env:
-          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-          REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
-        run: |
-          if [ -z "$REDDIT_CLIENT_ID" ]; then
-            echo "REDDIT_CLIENT_ID is not set"
-          else
-            echo "REDDIT_CLIENT_ID is set and has length ${#REDDIT_CLIENT_ID}"
-          fi
-
-          if [ -z "$REDDIT_CLIENT_SECRET" ]; then
-            echo "REDDIT_CLIENT_SECRET is not set"
-          else
-            echo "REDDIT_CLIENT_SECRET is set and has length ${#REDDIT_CLIENT_SECRET}"
-          fi
-
-          if [ -z "$REDDIT_USER_AGENT" ]; then
-            echo "REDDIT_USER_AGENT is not set"
-          else
-            echo "REDDIT_USER_AGENT is set and has length ${#REDDIT_USER_AGENT}"
-          fi
-
-
       - name: Deploy CloudFormation Stack for SSM Parameters
         run: |
           aws cloudformation deploy \
-            --stack-name reddit-ssm-stack-v3 \
+            --stack-name reddit-ssm-stack \
             --template-file template/SSM.template.yaml \
             --parameter-overrides "RedditClientId=${{ secrets.REDDIT_CLIENT_ID }}" "RedditClientSecret=${{ secrets.REDDIT_CLIENT_SECRET }}" "RedditUserAgent=${{ secrets.REDDIT_USER_AGENT }}" \
             --capabilities CAPABILITY_NAMED_IAM
