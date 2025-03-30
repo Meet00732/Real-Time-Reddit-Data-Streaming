@@ -1,6 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from kafka import KafkaProducer
+import time
 import json
 import os
 import praw
@@ -11,7 +13,9 @@ load_dotenv()
 
 default_args = {
     'owner': 'airmeet',
-    'start_date': datetime(2025, 3, 27, 9, 0)
+    'start_date': datetime(2025, 3, 27),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5)
 }
 
 def init_reddit_client():
@@ -85,6 +89,9 @@ def fetch_reddit_data(**kwargs):
     reddit = init_reddit_client()
     subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
     results = get_reddit_data(reddit, subreddits, limit=5)
+
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
+    producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
     
     # Print the results as a formatted JSON string
     print(json.dumps(results, indent=3))

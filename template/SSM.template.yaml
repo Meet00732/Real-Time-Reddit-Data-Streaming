@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "SSM Parameter Store Template for Reddit Credentials"
+
+Parameters:
+  RedditClientId:
+    Type: String
+    Description: "The Reddit Client ID"
+
+  RedditClientSecret:
+    Type: String
+    Description: "The Reddit Client Secret"
+
+  RedditUserAgent:
+    Type: String
+    Description: "The Reddit User Agent"
+
+Resources:
+  RedditClientIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: REDDIT_CLIENT_ID
+      Type: SecureString
+      Value: !Ref RedditClientId
+
+  RedditClientSecretParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: REDDIT_CLIENT_SECRET
+      Type: SecureString
+      Value: !Ref RedditClientSecret
+
+  RedditUserAgentParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: REDDIT_USER_AGENT
+      Type: SecureString
+      Value: !Ref RedditUserAgent
+
+Outputs:
+  RedditClientIdOutput:
+    Description: "The SSM parameter name for Reddit Client ID"
+    Value: REDDIT_CLIENT_ID
+
+  RedditClientSecretOutput:
+    Description: "The SSM parameter name for Reddit Client Secret"
+    Value: REDDIT_CLIENT_SECRET
+
+  RedditUserAgentOutput:
+    Description: "The SSM parameter name for Reddit User Agent"
+    Value: REDDIT_USER_AGENT
