@@ -22,9 +22,9 @@ Parameters:
 
 
 Mappings:
-RegionMap:
-  us-east-1:
-    AMI: "ami-0c2b8ca1dad447f8a"
+  RegionMap:
+    us-east-1:
+      AMI: "ami-0c2b8ca1dad447f8a"
 
 Resources:
   InstanceSecurityGroup:
