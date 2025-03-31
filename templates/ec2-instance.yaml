@@ -56,7 +56,7 @@ Resources:
         - Key: Name
           Value: Reddit-EC2SecurityGroup
 
-  Ec2Instance:
+  EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
