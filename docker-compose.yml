@@ -111,10 +111,11 @@ services:
   airflow-scheduler:
     image: apache/airflow:2.6.1
     container_name: airflow-scheduler  
+    entrypoint: sh -c "chown -R 50000:50000 /opt/airflow/dags /opt/airflow/logs /opt/airflow/plugins && airflow scheduler"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-      AIRFLOW__CORE__FERNET_KEY: "YOUR_FERNET_KEY"
+      AIRFLOW__CORE__FERNET_KEY: "osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q="
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
     volumes:
       - ./dags:/opt/airflow/dags
@@ -129,10 +130,11 @@ services:
     container_name: airflow-webserver
     depends_on:
       - airflow-scheduler
+    entrypoint: sh -c "chown -R 50000:50000 /opt/airflow/dags /opt/airflow/logs /opt/airflow/plugins && airflow webserver"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-      AIRFLOW__CORE__FERNET_KEY: osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q=
+      AIRFLOW__CORE__FERNET_KEY: "osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q="
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
     ports:
       - "8080:8080"
