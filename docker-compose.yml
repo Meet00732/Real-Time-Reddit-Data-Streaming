@@ -117,9 +117,9 @@ services:
       AIRFLOW__CORE__FERNET_KEY: "osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q="
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
     command: scheduler
     networks:
       - confluent
@@ -137,9 +137,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
     command: webserver
     networks:
       - confluent
