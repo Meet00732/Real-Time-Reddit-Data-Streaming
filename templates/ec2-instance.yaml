@@ -72,6 +72,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           yum update -y
+
+          # Install docker and start the service
           amazon-linux-extras install docker -y
           service docker start
           usermod -a -G docker ec2-user
@@ -83,12 +85,23 @@ Resources:
           swapon /swapfile
           echo "/swapfile none swap sw 0 0" >> /etc/fstab
 
+          # Install docker-compose
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
+
+          # Install git and python3 (which includes pip)
           yum install -y git
+          yum install -y python3
+
           cd /home/ec2-user
           git clone ${GitRepoURL} app
           cd app
+
+          # Upgrade pip and install required python packages
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+
+          # Start your application with docker-compose
           docker-compose up -d
       
 Outputs:
