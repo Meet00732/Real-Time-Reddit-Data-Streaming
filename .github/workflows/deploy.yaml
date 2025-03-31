@@ -43,7 +43,7 @@ jobs:
       - name: Deploy Networking Stack
         run: |
           aws cloudformation deploy \
-            --stack-name mvp-networking-stack \
+            --stack-name reddit-networking-stack \
             --template-file templates/networking.yaml \
             --capabilities CAPABILITY_NAMED_IAM
 
@@ -64,10 +64,10 @@ jobs:
       - name: Deploy EC2 Instance Stack
         run: |
           # Fetch exported values from the Networking Stack
-          VPC_ID=$(aws cloudformation describe-stacks --stack-name mvp-networking-stack --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue" --output text)
-          PUBLIC_SUBNET_ID=$(aws cloudformation describe-stacks --stack-name mvp-networking-stack --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId'].OutputValue" --output text)
+          VPC_ID=$(aws cloudformation describe-stacks --stack-name reddit-networking-stack --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue" --output text)
+          PUBLIC_SUBNET_ID=$(aws cloudformation describe-stacks --stack-name reddit-networking-stack --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId'].OutputValue" --output text)
           aws cloudformation deploy \
-            --stack-name mvp-ec2-stack \
+            --stack-name reddit-ec2-stack \
             --template-file templates/ec2-instance.yaml \
-            --parameter-overrides KeyName=${{ secrets.KEY_NAME }} VPCId=$VPC_ID PublicSubnetId=$PUBLIC_SUBNET_ID }} \
+            --parameter-overrides KeyName=${{ secrets.KEY_NAME }} VPCId=$VPC_ID PublicSubnetId=$PUBLIC_SUBNET_ID \
             --capabilities CAPABILITY_NAMED_IAM
