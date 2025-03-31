@@ -12,7 +12,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
   volumes:
-    - ./dags:/opt/airflow/dags
+    - airflow_dags:/opt/airflow/dags
     - airflow_logs:/opt/airflow/logs
     - airflow_plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
@@ -112,5 +112,6 @@ networks:
 
 volumes:
   postgres_db:
+  airflow_dags:
   airflow_logs:
   airflow_plugins:
