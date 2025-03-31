@@ -33,7 +33,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      # Update PLAINTEXT_HOST to use localhost instead of broker.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -52,7 +52,7 @@ services:
     networks:
       - confluent
     healthcheck:
-      test: [ "CMD", "bash", "-c", 'nc -z localhost 9092' ]
+      test: [ "CMD", "bash", "-c", 'nc -z localhost 29092' ]
       interval: 10s
       timeout: 5s
       retries: 5
