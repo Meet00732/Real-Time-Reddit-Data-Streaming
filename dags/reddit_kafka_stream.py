@@ -6,6 +6,10 @@ import json
 import os
 import boto3
 import praw
+import logging
+
+# Configure logging: Airflow picks up logs from Python's logging module.
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 default_args = {
     'owner': 'airmeet',
@@ -18,7 +22,8 @@ def get_secret(secret_name):
     """
     Retrieve a secret value from AWS Secrets Manager.
     """
-    client = boto3.client('secretsmanager')
+    # Specify region_name to avoid NoRegionError.
+    client = boto3.client('secretsmanager', region_name='us-east-1')
     response = client.get_secret_value(SecretId=secret_name)
     return response['SecretString']
 
@@ -88,23 +93,35 @@ def fetch_reddit_data(**kwargs):
     Initializes the Reddit client, retrieves submissions from the specified subreddit(s)
     using the stream API, and sends the results to Kafka.
     """
-    reddit = init_reddit_client()
-    subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
-    results = get_reddit_data(reddit, subreddits, limit=5)
+    try:
+        reddit = init_reddit_client()
+        subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
+        results = get_reddit_data(reddit, subreddits, limit=5)
+        
+        # Log the results using logging.info so they appear in Airflow logs.
+        logging.info("Fetched Reddit data: %s", json.dumps(results, indent=3))
+        
+        # Uncomment and configure Kafka sending if needed:
+        # producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+        # producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
+        return results
+    except Exception as e:
+        logging.exception("An error occurred while fetching Reddit data: %s", e)
+        raise
 
-    # producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
-    # producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
-    print(json.dumps(results, indent=3))
-    return results
-
-with DAG(
-    dag_id='reddit_data_ingestion',
-    default_args=default_args,
-    schedule_interval='@daily',  # Change to None if you want manual triggering only
-    catchup=False,
-) as dag:
+# Uncomment below to use as an Airflow DAG
+# with DAG(
+#     dag_id='reddit_data_ingestion',
+#     default_args=default_args,
+#     schedule_interval='@daily',  # Change to None for manual triggering only
+#     catchup=False,
+# ) as dag:
     
-    reddit_data_task = PythonOperator(
-        task_id='fetch_reddit_data',
-        python_callable=fetch_reddit_data,
-    )
+#     reddit_data_task = PythonOperator(
+#         task_id='fetch_reddit_data',
+#         python_callable=fetch_reddit_data,
+#     )
+
+# For standalone testing
+if __name__ == "__main__":
+    fetch_reddit_data()
