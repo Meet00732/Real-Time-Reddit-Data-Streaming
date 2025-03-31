@@ -112,6 +112,5 @@ networks:
 
 volumes:
   postgres_db:
-  airflow_dags:
   airflow_logs:
   airflow_plugins:

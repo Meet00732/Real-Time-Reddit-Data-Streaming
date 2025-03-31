@@ -65,6 +65,12 @@ Resources:
       SubnetId: !Ref PublicSubnetId
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 30             # 30 GB volume (free tier eligible if within limits)
+            VolumeType: gp2
+            DeleteOnTermination: true
       Tags:
         - Key: Name
           Value: MVP-EC2Instance
@@ -81,7 +87,6 @@ Resources:
           cd /home/ec2-user
           git clone ${GitRepoURL} app
           cd app
-          pip install -r requirements.txt
           docker-compose up -d
       
 Outputs:
