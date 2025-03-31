@@ -1,6 +1,25 @@
 version: '3'
 
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.3-python3.10}
+  platform: linux/amd64
+  environment:
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:-redispass}@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q=}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+  volumes:
+    - airflow_dags:/opt/airflow/dags
+    - airflow_logs:/opt/airflow/logs
+    - airflow_plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  restart: always
+
 services:
+  # Confluent stack services (your Kafka-related services)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     hostname: zookeeper
@@ -11,7 +30,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ['CMD', 'bash', '-c', "echo 'ruok' | nc localhost 2181"]
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +49,7 @@ services:
       - "9101:9101"
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
@@ -51,7 +70,7 @@ services:
     networks:
       - confluent
     healthcheck:
-      test: [ "CMD", "bash", "-c", "nc -z localhost 29092" ]
+      test: ["CMD", "bash", "-c", "nc -z localhost 29092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,7 +91,7 @@ services:
     networks:
       - confluent
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
       interval: 60s
       timeout: 20s
       retries: 5
@@ -89,7 +108,7 @@ services:
     ports:
       - "9021:9021"
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:29092"
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
@@ -100,54 +119,105 @@ services:
     networks:
       - confluent
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9021/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9021/health"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  airflow-scheduler:
-    image: apache/airflow:2.6.1
-    container_name: airflow-scheduler  
+  # PostgreSQL for Airflow metadata DB
+  postgres:
+    image: postgres:15
+    container_name: postgres
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/db/airflow.db
-      AIRFLOW__CORE__FERNET_KEY: "osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q="
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-airflow}
+      POSTGRES_DB: airflow
     volumes:
-      - airflow_dags:/opt/airflow/dags
-      - airflow_logs:/opt/airflow/logs
-      - airflow_plugins:/opt/airflow/plugins
-      - airflow_db:/opt/airflow/db
-    command: bash -c "airflow db init && airflow scheduler"
+      - postgres_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
     networks:
-      - confluent
+      - airflow-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redispass}"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+    networks:
+      - airflow-network
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command: >
+      -c "airflow db init &&
+          airflow users create --username ${AIRFLOW_ADMIN_USERNAME:-admin} --password ${AIRFLOW_ADMIN_PASSWORD:-admin} --firstname ${AIRFLOW_ADMIN_FIRSTNAME:-Admin} --lastname ${AIRFLOW_ADMIN_LASTNAME:-User} --role Admin --email ${AIRFLOW_ADMIN_EMAIL:-admin@example.com}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - airflow-network
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    depends_on:
+      - airflow-init
+    networks:
+      - airflow-network
 
   airflow-webserver:
-    image: apache/airflow:2.6.1
+    <<: *airflow-common
     container_name: airflow-webserver
-    depends_on:
-      - airflow-scheduler
-    environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/db/airflow.db
-      AIRFLOW__CORE__FERNET_KEY: "osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q="
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    command: webserver
     ports:
       - "8080:8080"
-    volumes:
-      - airflow_dags:/opt/airflow/dags
-      - airflow_logs:/opt/airflow/logs
-      - airflow_plugins:/opt/airflow/plugins
-      - airflow_db:/opt/airflow/db
-    command: bash -c "airflow db init && airflow webserver"
+    depends_on:
+      - airflow-init
     networks:
-      - confluent
+      - airflow-network
+
+  airflow-worker:
+    <<: *airflow-common
+    container_name: airflow-worker
+    command: celery worker
+    depends_on:
+      - airflow-init
+    networks:
+      - airflow-network
+
+  flower:
+    <<: *airflow-common
+    container_name: airflow-flower
+    command: celery flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - airflow-init
+    networks:
+      - airflow-network
 
 networks:
   confluent:
+    name: confluent
+  airflow-network:
+    name: airflow-network
 
 volumes:
+  postgres_db:
   airflow_dags:
   airflow_logs:
   airflow_plugins:
-  airflow_db:
