@@ -1,13 +1,12 @@
-name: Deploy SSM Parameters Stack
+name: Deploy All Stacks
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  deploy-ssm:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -19,10 +18,56 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy CloudFormation Stack for SSM Parameters
+      - name: Deploy SSM Parameters Stack
         run: |
           aws cloudformation deploy \
             --stack-name reddit-ssm-stack \
-            --template-file template/SSM.template.yaml \
+            --template-file templates/SSM.template.yaml \
             --parameter-overrides "RedditClientId=${{ secrets.REDDIT_CLIENT_ID }}" "RedditClientSecret=${{ secrets.REDDIT_CLIENT_SECRET }}" "RedditUserAgent=${{ secrets.REDDIT_USER_AGENT }}" \
+            --capabilities CAPABILITY_NAMED_IAM
+
+  deploy-networking:
+    runs-on: ubuntu-latest
+    needs: deploy-ssm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy Networking Stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name mvp-networking-stack \
+            --template-file templates/networking.yaml \
+            --capabilities CAPABILITY_NAMED_IAM
+
+  deploy-ec2:
+    runs-on: ubuntu-latest
+    needs: deploy-networking
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy EC2 Instance Stack
+        run: |
+          # Fetch exported values from the Networking Stack
+          VPC_ID=$(aws cloudformation describe-stacks --stack-name mvp-networking-stack --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue" --output text)
+          PUBLIC_SUBNET_ID=$(aws cloudformation describe-stacks --stack-name mvp-networking-stack --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId'].OutputValue" --output text)
+          aws cloudformation deploy \
+            --stack-name mvp-ec2-stack \
+            --template-file templates/ec2-instance.yaml \
+            --parameter-overrides KeyName=${{ secrets.KEY_NAME }} VPCId=$VPC_ID PublicSubnetId=$PUBLIC_SUBNET_ID }} \
             --capabilities CAPABILITY_NAMED_IAM

@@ -2,3 +2,4 @@ apache-airflow
 praw
 dotenv
 kafka-python
+boto3

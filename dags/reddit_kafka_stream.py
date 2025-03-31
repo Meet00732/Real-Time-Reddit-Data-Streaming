@@ -2,14 +2,10 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from kafka import KafkaProducer
-import time
 import json
 import os
+import boto3
 import praw
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 default_args = {
     'owner': 'airmeet',
@@ -18,14 +14,25 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
+def get_secret(secret_name):
+    """
+    Retrieve a secret value from AWS Secrets Manager.
+    """
+    client = boto3.client('secretsmanager')
+    response = client.get_secret_value(SecretId=secret_name)
+    return response['SecretString']
+
 def init_reddit_client():
     """
-    Initialize and return a Reddit API client.
+    Initialize and return a Reddit API client using credentials from Secrets Manager.
     """
+    client_id = get_secret("redditstream-REDDIT_CLIENT_ID")
+    client_secret = get_secret("redditstream-REDDIT_CLIENT_SECRET")
+    user_agent = get_secret("redditstream-REDDIT_USER_AGENT")
     return praw.Reddit(
-        client_id=os.getenv("REDDIT_CLIENT_ID"),
-        client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-        user_agent=os.getenv("REDDIT_USER_AGENT")
+        client_id=client_id,
+        client_secret=client_secret,
+        user_agent=user_agent
     )
 
 def get_top_comments(submission, top_n=5):
@@ -47,25 +54,20 @@ def get_reddit_data(reddit, subreddits, limit=1):
     """
     Retrieve submissions from the specified subreddits using the stream API.
     If selftext is empty or very short, fetch the top 5 comments separately.
-    The function collects submissions until the specified limit is reached.
     """
     submissions = reddit.subreddit(subreddits).stream.submissions(skip_existing=False)
     results = []
     for submission in submissions:
-        # Combine title and selftext
         text = f"{submission.title or ''}\n{submission.selftext or ''}".strip()
-        
-        # If selftext is empty or very short, retrieve top 5 comments (kept separate)
         if not submission.selftext or len(submission.selftext) < 200:
             top_comments = get_top_comments(submission, top_n=5)
         else:
             top_comments = []
-        
         data = {
             "id": submission.id,
             "title": submission.title,
             "selftext": submission.selftext,
-            "top_comments": top_comments,  # List of separate comment bodies
+            "top_comments": top_comments,
             "subreddit": submission.subreddit.display_name,
             "created_utc": submission.created_utc,
             "score": submission.score,
@@ -84,32 +86,25 @@ def get_reddit_data(reddit, subreddits, limit=1):
 def fetch_reddit_data(**kwargs):
     """
     Initializes the Reddit client, retrieves submissions from the specified subreddit(s)
-    using the stream API, and prints the results as JSON.
+    using the stream API, and sends the results to Kafka.
     """
     reddit = init_reddit_client()
     subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
     results = get_reddit_data(reddit, subreddits, limit=5)
 
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
+    producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
     producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
-    
-    # Print the results as a formatted JSON string
     print(json.dumps(results, indent=3))
     return results
 
-# with DAG(
-#     dag_id='reddit_data_ingestion',
-#     default_args=default_args,
-#     schedule_interval='@daily',
-#     catchup=False,
-# ) as dag:
+with DAG(
+    dag_id='reddit_data_ingestion',
+    default_args=default_args,
+    schedule_interval='@daily',  # Change to None if you want manual triggering only
+    catchup=False,
+) as dag:
     
-#     reddit_data_task = PythonOperator(
-#         task_id='fetch_reddit_data',
-#         python_callable=fetch_reddit_data,
-#         provide_context=True,
-#     )
-
-# For local testing, you can run:
-if __name__ == "__main__":
-    fetch_reddit_data()
+    reddit_data_task = PythonOperator(
+        task_id='fetch_reddit_data',
+        python_callable=fetch_reddit_data,
+    )
