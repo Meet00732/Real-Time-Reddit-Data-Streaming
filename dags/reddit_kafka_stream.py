@@ -92,8 +92,8 @@ def fetch_reddit_data(**kwargs):
     subreddits = "Spiderman"  # Modify this to your desired subreddit(s)
     results = get_reddit_data(reddit, subreddits, limit=5)
 
-    producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
-    producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
+    # producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+    # producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
     print(json.dumps(results, indent=3))
     return results
 
