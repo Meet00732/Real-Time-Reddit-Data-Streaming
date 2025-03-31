@@ -100,7 +100,7 @@ def fetch_reddit_data(**kwargs):
 with DAG(
     dag_id='reddit_data_ingestion',
     default_args=default_args,
-    schedule_interval='@daily',  # Change to None if you want manual triggering only
+    schedule_interval=None,  # Change to None if you want manual triggering only
     catchup=False,
 ) as dag:
     
