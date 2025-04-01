@@ -95,6 +95,11 @@ Resources:
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
       IamInstanceProfile: !Ref EC2InstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 30
+            VolumeType: gp2
       Tags:
         - Key: Name
           Value: Reddit-EC2Instance
