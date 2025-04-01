@@ -2,7 +2,7 @@ name: Deploy All Stacks
 
 on:
   push:
-    branches: [ adding-kafka-docker-compose ]
+    branches: [ EDS/adding-kafka-docker-compose ]
 
 jobs:
   deploy-ssm:
