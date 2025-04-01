@@ -56,6 +56,35 @@ Resources:
         - Key: Name
           Value: Reddit-EC2SecurityGroup
 
+  EC2IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: AccessSecretsManagerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: "*"   # Replace "*" with a more restrictive ARN if possible
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref EC2IAMRole
+
+
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -65,6 +94,7 @@ Resources:
       SubnetId: !Ref PublicSubnetId
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
       Tags:
         - Key: Name
           Value: MVP-EC2Instance
