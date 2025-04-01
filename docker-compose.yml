@@ -7,9 +7,9 @@ x-airflow-common: &airflow-common
   platform: linux/amd64
   environment:
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@localhost/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@localhost/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:-redispass}@localhost:6379/0
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:-redispass}@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q=}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
