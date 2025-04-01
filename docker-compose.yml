@@ -22,21 +22,21 @@ x-airflow-common: &airflow-common
 
 services:
   zookeeper:
-      image: confluentinc/cp-zookeeper:7.4.0
-      hostname: zookeeper
-      container_name: zookeeper
-      ports:
-        - "2181:2181"
-      environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
-      healthcheck:
-        test: ['CMD', 'bash', '-c', "echo 'ruok' | nc localhost 2181"]
-        interval: 20s
-        timeout: 5s
-        retries: 5
-      networks:
-        - airflow-network
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ['CMD', 'bash', '-c', "echo 'ruok' | nc localhost 2181"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    networks:
+      - airflow-network
 
   broker:
     image: confluentinc/cp-server:7.4.0
@@ -63,7 +63,7 @@ services:
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     networks:
       - airflow-network
     healthcheck:
@@ -116,12 +116,12 @@ services:
       PORT: 9021
     networks:
       - airflow-network
+    command: sh -c "sleep 60 && /etc/confluent/docker/run"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9021/health" ]
       interval: 20s
       timeout: 5s
       retries: 5
-
 
   postgres:
     image: postgres:15

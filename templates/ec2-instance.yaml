@@ -98,7 +98,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
-            VolumeSize: 30
+            VolumeSize: 50
             VolumeType: gp2
       Tags:
         - Key: Name
