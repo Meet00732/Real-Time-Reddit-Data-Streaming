@@ -110,18 +110,18 @@ def fetch_reddit_data(**kwargs):
         raise
 
 # Uncomment below to use as an Airflow DAG
-# with DAG(
-#     dag_id='reddit_data_ingestion',
-#     default_args=default_args,
-#     schedule_interval='@daily',  # Change to None for manual triggering only
-#     catchup=False,
-# ) as dag:
+with DAG(
+    dag_id='reddit_data_ingestion',
+    default_args=default_args,
+    schedule_interval='@daily',  # Change to None for manual triggering only
+    catchup=False,
+) as dag:
     
-#     reddit_data_task = PythonOperator(
-#         task_id='fetch_reddit_data',
-#         python_callable=fetch_reddit_data,
-#     )
+    reddit_data_task = PythonOperator(
+        task_id='fetch_reddit_data',
+        python_callable=fetch_reddit_data,
+    )
 
 # For standalone testing
-if __name__ == "__main__":
-    fetch_reddit_data()
+# if __name__ == "__main__":
+#     fetch_reddit_data()
