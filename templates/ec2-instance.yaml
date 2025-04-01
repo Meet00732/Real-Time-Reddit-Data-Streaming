@@ -124,8 +124,7 @@ Resources:
           yum install -y python3
 
           cd /home/ec2-user
-          git clone ${GitRepoURL} app
-          git checkout EDS/adding-kafka-docker-compose
+          git clone -b EDS/adding-kafka-docker-compose ${GitRepoURL} app
           cd app
 
           # Upgrade pip and install required python packages
