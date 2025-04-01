@@ -53,6 +53,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      # Disable metrics reporter:
       # KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
@@ -63,10 +64,11 @@ services:
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
-      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
-      CONFLUENT_METRICS_ENABLE: 'false'
-      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      # Remove or comment out these lines to disable metrics reporting:
+      # CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
+      # CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      # CONFLUENT_METRICS_ENABLE: 'false'
+      # CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
     networks:
       - airflow-network
     healthcheck:
