@@ -8,8 +8,8 @@ x-airflow-common: &airflow-common
   environment:
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@localhost/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@postgres/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:-redispass}@redis:6379/0
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_DATABASE_PASSWORD:-airflow}@localhost/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:-redispass}@localhost:6379/0
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-osf9_VPRt2CRJqfytLcbpsKi1idYhkFyTZN-kY-4V3Q=}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
@@ -75,8 +75,6 @@ services:
     depends_on:
       - airflow-init
     network_mode: host
-    networks:
-      - airflow-network
 
   airflow-webserver:
     <<: *airflow-common
@@ -87,8 +85,6 @@ services:
     depends_on:
       - airflow-init
     network_mode: host
-    networks:
-      - airflow-network
 
   airflow-worker:
     <<: *airflow-common
@@ -97,8 +93,6 @@ services:
     depends_on:
       - airflow-init
     network_mode: host
-    networks:
-      - airflow-network
 
   flower:
     <<: *airflow-common
@@ -109,14 +103,12 @@ services:
     depends_on:
       - airflow-init
     network_mode: host
-    networks:
-      - airflow-network
 
 networks:
-  confluent:
-    name: confluent
   airflow-network:
     name: airflow-network
+  confluent:
+    name: confluent
 
 volumes:
   postgres_db:
