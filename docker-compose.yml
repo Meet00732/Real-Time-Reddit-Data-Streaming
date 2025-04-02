@@ -36,30 +36,30 @@ services:
     networks:
       - airflow-network
 
-  broker:
-    image: confluentinc/cp-server:7.4.0
-    hostname: broker
-    container_name: broker
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"   # Optional external access if needed
-      - "9101:9101"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_JMX_PORT: 9101
-      KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
-      CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
-      CONFLUENT_DATABALANCER_ENABLE: 'false'
-    networks:
-      - airflow-network
+  # broker:
+  #   image: confluentinc/cp-server:7.4.0
+  #   hostname: broker
+  #   container_name: broker
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "9092:9092"   # Optional external access if needed
+  #     - "9101:9101"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+  #     KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #     KAFKA_JMX_PORT: 9101
+  #     KAFKA_JMX_HOSTNAME: localhost
+  #     KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+  #     CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
+  #     CONFLUENT_DATABALANCER_ENABLE: 'false'
+  #   networks:
+  #     - airflow-network
 
   postgres:
     image: postgres:15
