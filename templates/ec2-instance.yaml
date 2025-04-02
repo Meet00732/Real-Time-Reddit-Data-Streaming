@@ -52,6 +52,12 @@ Resources:
           FromPort: 9092
           ToPort: 9092
           CidrIp: 0.0.0.0/0
+        
+        - IpProtocol: tcp
+          FromPort: 2181
+          ToPort: 2181
+          CidrIp: 0.0.0.0/0
+
       Tags:
         - Key: Name
           Value: Reddit-EC2SecurityGroup
