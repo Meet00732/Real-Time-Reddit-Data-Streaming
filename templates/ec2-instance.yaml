@@ -52,6 +52,12 @@ Resources:
           FromPort: 9092
           ToPort: 9092
           CidrIp: 0.0.0.0/0
+        
+        - IpProtocol: tcp
+          FromPort: 2181
+          ToPort: 2181
+          CidrIp: 0.0.0.0/0
+
       Tags:
         - Key: Name
           Value: Reddit-EC2SecurityGroup
@@ -75,7 +81,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource: "*"   # Replace "*" with a more restrictive ARN if possible
+                Resource: "*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -88,16 +94,21 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.small
+      InstanceType: t3.large
       KeyName: !Ref KeyName
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       SubnetId: !Ref PublicSubnetId
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
       IamInstanceProfile: !Ref EC2InstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 30
+            VolumeType: gp2
       Tags:
         - Key: Name
-          Value: MVP-EC2Instance
+          Value: Reddit-EC2Instance
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -124,7 +135,7 @@ Resources:
           yum install -y python3
 
           cd /home/ec2-user
-          git clone ${GitRepoURL} app
+          git clone -b EDS/adding-kafka-docker-compose ${GitRepoURL} app
           cd app
 
           # Upgrade pip and install required python packages
@@ -132,7 +143,7 @@ Resources:
           python3 -m pip install -r requirements.txt
 
           # Start your application with docker-compose
-          docker-compose up -d
+          # docker-compose up -d
       
 Outputs:
   InstanceId:
