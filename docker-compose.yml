@@ -28,6 +28,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: ruok,srvr
     healthcheck:
       test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181 | grep imok"]
       interval: 10s
@@ -35,6 +36,7 @@ services:
       retries: 5
     networks:
       - airflow-network
+
 
   # broker:
   #   image: confluentinc/cp-server:7.4.0
