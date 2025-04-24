@@ -241,7 +241,7 @@ services:
     
   spark-worker:
     image: bitnami/spark:latest
-    container: spark-worker
+    container_name: spark-worker
     depends_on:
       - spark-master
     environment:
