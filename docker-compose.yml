@@ -257,7 +257,7 @@ services:
       - airflow-network
 
     
-  casandra:
+  cassandra:
       image: cassandra:latest
       container_name: cassandra
       hostname: cassandra
