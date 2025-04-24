@@ -1,12 +1,11 @@
 FROM bitnami/spark:latest
-
 USER root
-# install Python deps (including Cassandra driver)
+
+# copy and install Python deps
 COPY streaming_requirements.txt /app/
 RUN pip3 install --upgrade pip \
  && pip3 install -r /app/streaming_requirements.txt
 
-# bring in your streaming script
 COPY pyspark_streaming.py /app/
 WORKDIR /app
 
