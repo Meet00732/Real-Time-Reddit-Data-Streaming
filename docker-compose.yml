@@ -214,6 +214,61 @@ services:
     networks:
       - airflow-network
 
+  
+  # ############################################################################################################
+
+  # # SPARK MASTER - WORKER
+
+  # ############################################################################################################
+
+  # spark-master:
+  #   image: bitnami/spark:latest
+  #   container_name: spark-master
+  #   environment:
+  #     - SPARK_MODE=master
+  #     - SPARK_MASTER_HOST=spark-master
+  #     - SPARK_MASTER_PORT=7077
+  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
+  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
+  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+  #     - SPARK_SSL_ENABLED=no
+  #   ports:
+  #     - "9090:8080"
+  #     - "7077:7077"
+  #   networks:
+  #     - airflow-network
+
+    
+  # spark-worker:
+  #   image: bitnami/spark:latest
+  #   container: spark-worker
+  #   environment:
+  #     - SPARK_MODE=worker
+  #     - SPARK_MASTER_URL=spark://spark-master:7077
+  #     - SPARK_WORKER_CORES=2
+  #     - SPARK_WORKER_MEMORY=1g
+  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
+  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
+  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+  #     - SPARK_SSL_ENABLED=no
+  #   networks:
+  #     - airflow-network
+
+    
+  # casandra-db:
+  #     image: cassandra:latest
+  #     container_name: cassandra
+  #     hostname: cassandra
+  #     ports:
+  #       - "9042:9042"
+  #     environment:
+  #       - MAX_HEAP_SIZE=512M
+  #       - HEAP_NEWSIZE=100M
+  #       - CASSANDRA_USERNAME=cassandra
+  #       - CASSANDRA_PASSWORD=cassandra
+  #     networks:
+  #       - airflow-network
+
 networks:
   airflow-network:
     name: airflow-network
