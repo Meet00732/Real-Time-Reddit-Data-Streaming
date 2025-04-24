@@ -120,7 +120,7 @@ def connect_to_kafka(spark_conn):
 
         spark_df = spark_conn.readStream \
                         .format("kafka") \
-                        .option("kafka.bootstrap.servers", "broker:9092") \
+                        .option("kafka.bootstrap.servers", "broker:29092") \
                         .option("subscribe", "reddit_data_created") \
                         .option("startingOffsets", "earliest") \
                         .option("failOnDataLoss", "false") \
