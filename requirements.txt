@@ -3,6 +3,6 @@ praw
 dotenv
 kafka-python
 boto3
-# cassandra-driver
-# spark
-# pyspark
+cassandra-driver
+spark
+pyspark
