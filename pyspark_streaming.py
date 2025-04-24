@@ -110,12 +110,22 @@ def insert_data(session, **kwargs):
 def connect_to_kafka(spark_conn):
     spark_df = None
     try:
+        # spark_df = spark_conn.readStream \
+        #             .format('kafka') \
+        #             .option('kafka.bootstrap.servers', 'broker:9092') \
+        #             .option('subscribe', 'reddit_data_created') \
+        #             .option('startingOffsets', 'latest') \
+        #             .option('failOnDataLoss', 'false') \
+        #             .load()
+
         spark_df = spark_conn.readStream \
-                    .format('kafka') \
-                    .option('kafka.bootstrap.servers', 'broker:29092') \
-                    .option('subscribe', 'reddit_data_created') \
-                    .option('startingOffsets', 'earliest') \
-                    .load()
+                        .format("kafka") \
+                        .option("kafka.bootstrap.servers", "broker:9092") \
+                        .option("subscribe", "reddit_data_created") \
+                        .option("startingOffsets", "earliest") \
+                        .option("failOnDataLoss", "false") \
+                        .load()
+
 
         logging.info("kafka dataframe created successfully")
     except Exception as e:
@@ -128,6 +138,7 @@ def create_spark_connection():
     # Create spark connection
     try:
         s_conn = SparkSession.builder \
+                .master("spark://spark-master:7077") \
                 .appName("SparkDataStreaming") \
                 .config(
                         'spark.jars.packages',

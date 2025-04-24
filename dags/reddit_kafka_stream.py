@@ -102,7 +102,7 @@ def fetch_reddit_data(**kwargs):
         logging.info("Fetched Reddit data: %s", json.dumps(results, indent=3))
         
         # Uncomment and configure Kafka sending if needed:
-        producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+        producer = KafkaProducer(bootstrap_servers=['broker:9092'], max_block_ms=5000)
         producer.send('reddit_data_created', json.dumps(results).encode('utf-8'))
         return results
     except Exception as e:
