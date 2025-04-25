@@ -92,16 +92,26 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource: "*"
-        - PolicyName: S3WritePolicy     ## ← NEW
+
+        - PolicyName: S3WritePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Effect: Allow
+              - Sid: BucketLevel
+                Effect: Allow
                 Action:
+                  - s3:GetBucketLocation
                   - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                Resource: !Sub "arn:aws:s3:::${BucketNameParam}"
+
+              - Sid: ObjectLevel
+                Effect: Allow
+                Action:
                   - s3:PutObject
+                  - s3:GetObject
+                  - s3:AbortMultipartUpload
                 Resource:
-                  - !Sub "arn:aws:s3:::${BucketNameParam}"
                   - !Sub "arn:aws:s3:::${BucketNameParam}/*"
 
 

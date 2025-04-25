@@ -1,7 +1,5 @@
+import os
 import logging
-from datetime import datetime
-
-from cassandra.cluster import Cluster
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
@@ -10,196 +8,64 @@ from pyspark.sql.types import (
     DoubleType, IntegerType, FloatType
 )
 
-
-# def create_keyspace(session):
-#     # Create keyspace
-#     session.execute("""
-#         CREATE KEYSPACE IF NOT EXISTS spark_streams
-#         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
-#     """)
-    
-#     logging.info("Keyspace created successfully!")
-
-
-# def create_table(session):
-#     # Create table
-#     session.execute("""
-#     CREATE TABLE IF NOT EXISTS spark_streams.reddit_submissions (
-#         id                text PRIMARY KEY,
-#         title             text,
-#         selftext          text,
-#         top_comments      list<text>,
-#         subreddit         text,
-#         created_utc       double,
-#         score             int,
-#         upvote_ratio      float,
-#         num_comments      int,
-#         url               text,
-#         domain            text,
-#         author            text,
-#         text_length       int
-#     );
-#     """)
-#     print("Table spark_streams.reddit_submissions created successfully!")
-
-# def insert_data(session, **kwargs):
-#     # Insert data
-#     """
-#     Insert one Reddit submission into cassandra.spark_streams.reddit_submissions.
-#     Expects kwargs with keys:
-#       id, title, selftext, top_comments, subreddit, created_utc,
-#       score, upvote_ratio, num_comments, url, domain, author, text_length
-#     """
-#     logging.info("Inserting Reddit submission %s …", kwargs.get("id"))
-
-#     # unpack all the fields from kwargs (with sensible defaults)
-#     submission_id   = kwargs.get("id")
-#     title           = kwargs.get("title", "")
-#     selftext        = kwargs.get("selftext", "")
-#     top_comments    = kwargs.get("top_comments", [])    # list<text>
-#     subreddit       = kwargs.get("subreddit", "")
-#     created_utc     = kwargs.get("created_utc", 0.0)
-#     score           = kwargs.get("score", 0)
-#     upvote_ratio    = kwargs.get("upvote_ratio", 0.0)
-#     num_comments    = kwargs.get("num_comments", 0)
-#     url             = kwargs.get("url", "")
-#     domain          = kwargs.get("domain", "")
-#     author          = kwargs.get("author", "")
-#     text_length     = kwargs.get("text_length", 0)
-
-#     try:
-#         session.execute("""
-#             INSERT INTO spark_streams.reddit_submissions (
-#                 id,
-#                 title,
-#                 selftext,
-#                 top_comments,
-#                 subreddit,
-#                 created_utc,
-#                 score,
-#                 upvote_ratio,
-#                 num_comments,
-#                 url,
-#                 domain,
-#                 author,
-#                 text_length
-#             ) VALUES (
-#                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-#             )
-#         """, (
-#             submission_id,
-#             title,
-#             selftext,
-#             top_comments,
-#             subreddit,
-#             created_utc,
-#             score,
-#             upvote_ratio,
-#             num_comments,
-#             url,
-#             domain,
-#             author,
-#             text_length
-#         ))
-#         logging.info("Inserted submission %s into cassandra", submission_id)
-#     except Exception as e:
-#         logging.error("Failed to insert submission %s: %s", submission_id, e)
-#         raise
-
-
-def connect_to_kafka(spark_conn):
-    spark_df = None
-    try:
-        # spark_df = spark_conn.readStream \
-        #             .format('kafka') \
-        #             .option('kafka.bootstrap.servers', 'broker:9092') \
-        #             .option('subscribe', 'reddit_data_created') \
-        #             .option('startingOffsets', 'latest') \
-        #             .option('failOnDataLoss', 'false') \
-        #             .load()
-
-        spark_df = spark_conn.readStream \
-                        .format("kafka") \
-                        .option("kafka.bootstrap.servers", "broker:29092") \
-                        .option("subscribe", "reddit_data_created") \
-                        .option("startingOffsets", "earliest") \
-                        .option("failOnDataLoss", "false") \
-                        .load()
-
-
-        logging.info("kafka dataframe created successfully")
-    except Exception as e:
-        logging.warning(f"kafka dataframe could not be created because: {e}")
-
-    return spark_df
-
-
 def create_spark_connection():
-    # Create spark connection
-    try:
-        s_conn = SparkSession.builder \
-                .master("spark://spark-master:7077") \
-                .appName("SparkDataStreaming") \
-                .config(
-                        'spark.jars.packages',
-                        "com.datastax.spark:spark-cassandra-connector_2.12:3.4.1,"
-                        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1"
-                    ) \
-                .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
-                .getOrCreate()
-        
-        s_conn.sparkContext.setLogLevel("ERROR")
-        logging.info("Spark connection created successfully!")
-        return s_conn
-    except Exception as e:
-        logging.error(f"Could not create spark session due to: {e}")
-        return None
+    return (
+        SparkSession.builder
+            .master("spark://spark-master:7077")
+            .appName("SparkDataStreaming")
+            # pull in Hadoop AWS + Kafka support
+            .config(
+                "spark.jars.packages",
+                "org.apache.hadoop:hadoop-aws:3.3.1,"
+                "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1"
+            )
+            # S3A filesystem impl
+            .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+            # use the EC2 instance profile credentials
+            .config(
+                "spark.hadoop.fs.s3a.aws.credentials.provider",
+                "com.amazonaws.auth.InstanceProfileCredentialsProvider"
+            )
+            .getOrCreate()
+    )
 
+def connect_to_kafka(spark):
+    return (
+        spark.readStream
+            .format("kafka")
+            .option("kafka.bootstrap.servers","broker:29092")
+            .option("subscribe","reddit_data_created")
+            .option("startingOffsets", "latest")
+            .option("failOnDataLoss","false")
+            .load()
+    )
 
-
-def create_cassandra_connection():
-    # Create cassandra connection
-    try:
-        cluster = Cluster(['cassandra'])
-        cassandra_session = cluster.connect()
-        return cassandra_session
-    except Exception as e:
-        logging.error(f"Could not create cassandra connection due to {e}")
-        return None
-
-
-def create_selection_df_from_kafka(spark_df):
-    # Define an ArrayType of Structs matching your Reddit submission fields
-    submissions_schema = ArrayType(
+def create_selection_df_from_kafka(kafka_df):
+    schema = ArrayType(
         StructType([
             StructField("id", StringType(), False),
-            StructField("title", StringType(), True),
-            StructField("selftext", StringType(), True),
-            StructField("top_comments", ArrayType(StringType()), True),
-            StructField("subreddit", StringType(), True),
-            StructField("created_utc", DoubleType(), True),
-            StructField("score", IntegerType(), True),
-            StructField("upvote_ratio", FloatType(), True),
-            StructField("num_comments", IntegerType(), True),
-            StructField("url", StringType(), True),
-            StructField("domain", StringType(), True),
-            StructField("author", StringType(), True),
-            StructField("text_length", IntegerType(), True),
+            StructField("title", StringType()),
+            StructField("selftext", StringType()),
+            StructField("top_comments", ArrayType(StringType())),
+            StructField("subreddit", StringType()),
+            StructField("created_utc", DoubleType()),
+            StructField("score", IntegerType()),
+            StructField("upvote_ratio", FloatType()),
+            StructField("num_comments", IntegerType()),
+            StructField("url", StringType()),
+            StructField("domain", StringType()),
+            StructField("author", StringType()),
+            StructField("text_length", IntegerType()),
         ])
     )
 
-    # 1) cast the binary Kafka value to string and parse it as JSON array
     parsed = (
-        spark_df
+        kafka_df
           .selectExpr("CAST(value AS STRING) AS json_str")
-          .select(from_json(col("json_str"), submissions_schema).alias("subs"))
+          .select(from_json(col("json_str"), schema).alias("subs"))
     )
-
-    # 2) explode the array so each element becomes its own row
     exploded = parsed.select(explode(col("subs")).alias("data"))
-
-    # 3) project out all the individual fields
-    sel = exploded.select(
+    return exploded.select(
         col("data.id").alias("id"),
         col("data.title").alias("title"),
         col("data.selftext").alias("selftext"),
@@ -212,36 +78,27 @@ def create_selection_df_from_kafka(spark_df):
         col("data.url").alias("url"),
         col("data.domain").alias("domain"),
         col("data.author").alias("author"),
-        col("data.text_length").alias("text_length")
+        col("data.text_length").alias("text_length"),
     )
 
-    return sel
-
-
 if __name__ == "__main__":
-    # Create spark connection
-    spark_conn = create_spark_connection()
+    logging.basicConfig(level=logging.INFO)
+    spark = create_spark_connection()
+    kafka_df   = connect_to_kafka(spark)
+    selection_df = create_selection_df_from_kafka(kafka_df)
 
-    if spark_conn is not None:
-        # Connect kafka with spark connection
-        kafka_df = connect_to_kafka(spark_conn)
-        selection_df = create_selection_df_from_kafka(kafka_df)
+    # you can hard-code it or, better, read from ENV:
+    bucket = os.getenv("BUCKET_NAME", "reddit-data-streaming-00732")
+    output_path     = f"s3a://{bucket}/reddit/"
+    checkpoint_path = f"s3a://{bucket}/reddit_checkpoint/"
 
-        bucket = "reddit-data-streaming-00732"
-        output_path = f"s3a://{bucket}/reddit/"
-        checkpoint_path = f"s3a://{bucket}/reddit_checkpoint/"
-
-        logging.info("Streaming is being started...")
-
-        query = (
-            selection_df
-            .writeStream
+    logging.info("Starting write to S3 at %s …", output_path)
+    query = (
+        selection_df.writeStream
             .format("parquet")
             .option("path", output_path)
             .option("checkpointLocation", checkpoint_path)
             .outputMode("append")
             .start()
-        )
-
-        logging.info("Started streaming to S3 at %s", output_path)
-        query.awaitTermination()
+    )
+    query.awaitTermination()
