@@ -290,22 +290,16 @@ services:
     #     retries: 10
 
   
-
-
   streamer:
     build:
       context: .
       dockerfile: Dockerfile.spark
     container_name: reddit-streamer
     depends_on:
-      broker:
-      spark-master:
-      spark-worker:
+      - broker
+      - spark-master
+      - spark-worker
     restart: on-failure
-    environment:
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     networks:
       - airflow-network
     command: ["python3", "pyspark_streaming.py"]
