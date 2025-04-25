@@ -99,6 +99,7 @@ if __name__ == "__main__":
             .option("path", output_path)
             .option("checkpointLocation", checkpoint_path)
             .outputMode("append")
+            .trigger(once=True)
             .start()
     )
     query.awaitTermination()

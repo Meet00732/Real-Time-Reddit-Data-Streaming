@@ -299,7 +299,7 @@ services:
       - broker
       - spark-master
       - spark-worker
-    restart: on-failure
+    restart: "on-failure:3"
     networks:
       - airflow-network
     command: ["python3", "pyspark_streaming.py"]

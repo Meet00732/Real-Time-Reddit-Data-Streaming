@@ -84,25 +84,35 @@ Resources:
             Action: sts:AssumeRole
       Path: "/"
       Policies:
+        - PolicyName: AccessSecretsManagerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: "*"
+
         - PolicyName: S3WritePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Sid: Buckets
+              - Sid: BucketLevel
                 Effect: Allow
                 Action:
                   - s3:GetBucketLocation
                   - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
                 Resource: !Sub "arn:aws:s3:::${BucketNameParam}"
-              - Sid: Objects
+
+              - Sid: ObjectLevel
                 Effect: Allow
                 Action:
-                  - s3:GetObject
                   - s3:PutObject
-                  - s3:DeleteObject
+                  - s3:GetObject
                   - s3:AbortMultipartUpload
-                  - s3:ListMultipartUploadParts
-                Resource: !Sub "arn:aws:s3:::${BucketNameParam}/*"
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketNameParam}/*"
 
 
   EC2InstanceProfile:
