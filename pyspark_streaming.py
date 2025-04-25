@@ -11,100 +11,100 @@ from pyspark.sql.types import (
 )
 
 
-def create_keyspace(session):
-    # Create keyspace
-    session.execute("""
-        CREATE KEYSPACE IF NOT EXISTS spark_streams
-        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
-    """)
+# def create_keyspace(session):
+#     # Create keyspace
+#     session.execute("""
+#         CREATE KEYSPACE IF NOT EXISTS spark_streams
+#         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
+#     """)
     
-    logging.info("Keyspace created successfully!")
+#     logging.info("Keyspace created successfully!")
 
 
-def create_table(session):
-    # Create table
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS spark_streams.reddit_submissions (
-        id                text PRIMARY KEY,
-        title             text,
-        selftext          text,
-        top_comments      list<text>,
-        subreddit         text,
-        created_utc       double,
-        score             int,
-        upvote_ratio      float,
-        num_comments      int,
-        url               text,
-        domain            text,
-        author            text,
-        text_length       int
-    );
-    """)
-    print("Table spark_streams.reddit_submissions created successfully!")
+# def create_table(session):
+#     # Create table
+#     session.execute("""
+#     CREATE TABLE IF NOT EXISTS spark_streams.reddit_submissions (
+#         id                text PRIMARY KEY,
+#         title             text,
+#         selftext          text,
+#         top_comments      list<text>,
+#         subreddit         text,
+#         created_utc       double,
+#         score             int,
+#         upvote_ratio      float,
+#         num_comments      int,
+#         url               text,
+#         domain            text,
+#         author            text,
+#         text_length       int
+#     );
+#     """)
+#     print("Table spark_streams.reddit_submissions created successfully!")
 
-def insert_data(session, **kwargs):
-    # Insert data
-    """
-    Insert one Reddit submission into cassandra.spark_streams.reddit_submissions.
-    Expects kwargs with keys:
-      id, title, selftext, top_comments, subreddit, created_utc,
-      score, upvote_ratio, num_comments, url, domain, author, text_length
-    """
-    logging.info("Inserting Reddit submission %s …", kwargs.get("id"))
+# def insert_data(session, **kwargs):
+#     # Insert data
+#     """
+#     Insert one Reddit submission into cassandra.spark_streams.reddit_submissions.
+#     Expects kwargs with keys:
+#       id, title, selftext, top_comments, subreddit, created_utc,
+#       score, upvote_ratio, num_comments, url, domain, author, text_length
+#     """
+#     logging.info("Inserting Reddit submission %s …", kwargs.get("id"))
 
-    # unpack all the fields from kwargs (with sensible defaults)
-    submission_id   = kwargs.get("id")
-    title           = kwargs.get("title", "")
-    selftext        = kwargs.get("selftext", "")
-    top_comments    = kwargs.get("top_comments", [])    # list<text>
-    subreddit       = kwargs.get("subreddit", "")
-    created_utc     = kwargs.get("created_utc", 0.0)
-    score           = kwargs.get("score", 0)
-    upvote_ratio    = kwargs.get("upvote_ratio", 0.0)
-    num_comments    = kwargs.get("num_comments", 0)
-    url             = kwargs.get("url", "")
-    domain          = kwargs.get("domain", "")
-    author          = kwargs.get("author", "")
-    text_length     = kwargs.get("text_length", 0)
+#     # unpack all the fields from kwargs (with sensible defaults)
+#     submission_id   = kwargs.get("id")
+#     title           = kwargs.get("title", "")
+#     selftext        = kwargs.get("selftext", "")
+#     top_comments    = kwargs.get("top_comments", [])    # list<text>
+#     subreddit       = kwargs.get("subreddit", "")
+#     created_utc     = kwargs.get("created_utc", 0.0)
+#     score           = kwargs.get("score", 0)
+#     upvote_ratio    = kwargs.get("upvote_ratio", 0.0)
+#     num_comments    = kwargs.get("num_comments", 0)
+#     url             = kwargs.get("url", "")
+#     domain          = kwargs.get("domain", "")
+#     author          = kwargs.get("author", "")
+#     text_length     = kwargs.get("text_length", 0)
 
-    try:
-        session.execute("""
-            INSERT INTO spark_streams.reddit_submissions (
-                id,
-                title,
-                selftext,
-                top_comments,
-                subreddit,
-                created_utc,
-                score,
-                upvote_ratio,
-                num_comments,
-                url,
-                domain,
-                author,
-                text_length
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
-        """, (
-            submission_id,
-            title,
-            selftext,
-            top_comments,
-            subreddit,
-            created_utc,
-            score,
-            upvote_ratio,
-            num_comments,
-            url,
-            domain,
-            author,
-            text_length
-        ))
-        logging.info("Inserted submission %s into cassandra", submission_id)
-    except Exception as e:
-        logging.error("Failed to insert submission %s: %s", submission_id, e)
-        raise
+#     try:
+#         session.execute("""
+#             INSERT INTO spark_streams.reddit_submissions (
+#                 id,
+#                 title,
+#                 selftext,
+#                 top_comments,
+#                 subreddit,
+#                 created_utc,
+#                 score,
+#                 upvote_ratio,
+#                 num_comments,
+#                 url,
+#                 domain,
+#                 author,
+#                 text_length
+#             ) VALUES (
+#                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+#             )
+#         """, (
+#             submission_id,
+#             title,
+#             selftext,
+#             top_comments,
+#             subreddit,
+#             created_utc,
+#             score,
+#             upvote_ratio,
+#             num_comments,
+#             url,
+#             domain,
+#             author,
+#             text_length
+#         ))
+#         logging.info("Inserted submission %s into cassandra", submission_id)
+#     except Exception as e:
+#         logging.error("Failed to insert submission %s: %s", submission_id, e)
+#         raise
 
 
 def connect_to_kafka(spark_conn):
@@ -145,7 +145,7 @@ def create_spark_connection():
                         "com.datastax.spark:spark-cassandra-connector_2.12:3.4.1,"
                         "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1"
                     ) \
-                .config('spark.cassandra.connection.host', 'cassandra') \
+                .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
                 .getOrCreate()
         
         s_conn.sparkContext.setLogLevel("ERROR")
@@ -220,34 +220,28 @@ def create_selection_df_from_kafka(spark_df):
 
 if __name__ == "__main__":
     # Create spark connection
-    spark_connection = create_spark_connection()
+    spark_conn = create_spark_connection()
 
-    if spark_connection is not None:
+    if spark_conn is not None:
         # Connect kafka with spark connection
-        df = connect_to_kafka(spark_connection)
-        selection_df = create_selection_df_from_kafka(df)
-        session = create_cassandra_connection()
+        kafka_df = connect_to_kafka(spark_conn)
+        selection_df = create_selection_df_from_kafka(kafka_df)
 
         bucket = "reddit-data-streaming-00732"
         output_path = f"s3a://{bucket}/reddit/"
         checkpoint_path = f"s3a://{bucket}/reddit_checkpoint/"
 
-        if session:
-            create_keyspace(session)
-            create_table(session)
-            # insert_data()
+        logging.info("Streaming is being started...")
 
-            logging.info("Streaming is being started...")
+        query = (
+            selection_df
+            .writeStream
+            .format("parquet")
+            .option("path", output_path)
+            .option("checkpointLocation", checkpoint_path)
+            .outputMode("append")
+            .start()
+        )
 
-            query = (
-                selection_df
-                .writeStream
-                .format("parquet")
-                .option("path", output_path)
-                .option("checkpointLocation", checkpoint_path)
-                .outputMode("append")
-                .start()
-            )
-
-            logging.info("Started streaming to S3 at %s", output_path)
-            query.awaitTermination()
+        logging.info("Started streaming to S3 at %s", output_path)
+        query.awaitTermination()

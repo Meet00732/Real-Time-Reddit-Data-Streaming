@@ -290,13 +290,11 @@ services:
     depends_on:
       broker:
         condition: service_healthy
-      # cassandra:
-      #   condition: service_healthy
       spark-master:
         condition: service_healthy
       spark-worker:
         condition: service_healthy
-    restart: on-failure      # ← keep it alive until the dependencies come up
+    restart: on-failure
     environment:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
