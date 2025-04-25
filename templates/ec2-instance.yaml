@@ -20,6 +20,11 @@ Parameters:
     Type: String
     Default: "https://github.com/Meet00732/Real-Time-Reddit-Data-Streaming.git"
 
+  BucketNameParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: redditstream-BUCKET_NAME
+    Description: "SSM path for our S3 bucket name"
+
 
 Mappings:
   RegionMap:
@@ -87,6 +92,18 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource: "*"
+        - PolicyName: S3WritePolicy     ## ← NEW
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketNameParam}"
+                  - !Sub "arn:aws:s3:::${BucketNameParam}/*"
+
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile

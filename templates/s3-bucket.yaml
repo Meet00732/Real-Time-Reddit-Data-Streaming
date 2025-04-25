@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "S3 bucket for Reddit streaming data"
+
+Resources:
+  RedditStreamingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: reddit-data-streaming-00732
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOneYear
+            Status: Enabled
+            ExpirationInDays: 365
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls:       true
+        IgnorePublicAcls:      true
+        BlockPublicPolicy:     true
+        RestrictPublicBuckets: true
+
+Outputs:
+  BucketName:
+    Description: "The name of the S3 bucket"
+    Value: !Ref RedditStreamingBucket
+    Export:
+      Name: reddit-s3-BucketName

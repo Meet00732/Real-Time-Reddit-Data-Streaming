@@ -228,6 +228,10 @@ if __name__ == "__main__":
         selection_df = create_selection_df_from_kafka(df)
         session = create_cassandra_connection()
 
+        bucket = "reddit-data-streaming-00732"
+        output_path = f"s3a://{bucket}/reddit/"
+        checkpoint_path = f"s3a://{bucket}/reddit_checkpoint/"
+
         if session:
             create_keyspace(session)
             create_table(session)
@@ -235,13 +239,15 @@ if __name__ == "__main__":
 
             logging.info("Streaming is being started...")
 
-            streaming_query = (selection_df
-                                .writeStream
-                                .format("org.apache.spark.sql.cassandra")
-                                .option('checkpointLocation', '/tmp/checkpoint')
-                                .option('keyspace', 'spark_streams')
-                                .option('table', 'reddit_submissions')
-                                .start())
+            query = (
+                selection_df
+                .writeStream
+                .format("parquet")
+                .option("path", output_path)
+                .option("checkpointLocation", checkpoint_path)
+                .outputMode("append")
+                .start()
+            )
 
-
-            streaming_query.awaitTermination()
+            logging.info("Started streaming to S3 at %s", output_path)
+            query.awaitTermination()

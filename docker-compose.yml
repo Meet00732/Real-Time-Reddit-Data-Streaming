@@ -261,21 +261,26 @@ services:
       - airflow-network
 
     
-  cassandra:
-      image: cassandra:latest
-      container_name: cassandra
-      hostname: cassandra
-      ports:
-        - "9042:9042"
-      environment:
-        - MAX_HEAP_SIZE=512M
-        - HEAP_NEWSIZE=100M
-        - CASSANDRA_USERNAME=cassandra
-        - CASSANDRA_PASSWORD=cassandra
-      volumes:
-        - cassandra_data:/bitnami/cassandra
-      networks:
-        - airflow-network
+    # cassandra:
+    #   image: cassandra:latest
+    #   container_name: cassandra
+    #   hostname: cassandra
+    #   ports:
+    #     - "9042:9042"
+    #   # persist data under Cassandra's default path
+    #   volumes:
+    #     - cassandra_data:/var/lib/cassandra/data
+    #   networks:
+    #     - airflow-network
+    #   # simple healthcheck without auth (default image has no password enabled)
+    #   healthcheck:
+    #     test: ["CMD", "cqlsh", "-e", "DESCRIBE KEYSPACES"]
+    #     interval: 10s
+    #     timeout: 5s
+    #     retries: 10
+
+  
+
 
   streamer:
     build:
@@ -283,11 +288,19 @@ services:
       dockerfile: Dockerfile.spark
     container_name: reddit-streamer
     depends_on:
-      - broker
-      - cassandra
-      - spark-master
-      - spark-worker
+      broker:
+        condition: service_healthy
+      # cassandra:
+      #   condition: service_healthy
+      spark-master:
+        condition: service_healthy
+      spark-worker:
+        condition: service_healthy
     restart: on-failure      # ← keep it alive until the dependencies come up
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     networks:
       - airflow-network
     command: ["python3", "pyspark_streaming.py"]
@@ -301,4 +314,4 @@ volumes:
   postgres_db:
   airflow_logs:
   airflow_plugins:
-  cassandra_data:
+  # cassandra_data:

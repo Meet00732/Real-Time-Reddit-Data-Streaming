@@ -14,6 +14,10 @@ Parameters:
     Type: String
     Description: "The Reddit User Agent"
 
+  BucketName:
+    Type: String
+    Description: "The globally unique name for your S3 bucket"
+
 Resources:
   RedditClientIdSecret:
     Type: AWS::SecretsManager::Secret
@@ -35,6 +39,15 @@ Resources:
       Name: redditstream-REDDIT_USER_AGENT
       Description: "Reddit User Agent"
       SecretString: !Ref RedditUserAgent
+    
+
+  StreamingBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: redditstream-BUCKET_NAME
+      Description: "S3 bucket name for Reddit streaming data"
+      Type: String
+      Value: !Ref BucketName
 
 Outputs:
   RedditClientIdOutput:
@@ -48,3 +61,7 @@ Outputs:
   RedditUserAgentOutput:
     Description: "The name of the Secrets Manager secret for Reddit User Agent"
     Value: redditstream-REDDIT_USER_AGENT
+
+  StreamingBucketNameOutput:
+    Description: "SSM Parameter path for the S3 bucket name"
+    Value: redditstream-BUCKET_NAME
