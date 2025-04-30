@@ -297,20 +297,19 @@ services:
       context: .
       dockerfile: Dockerfile.spark
     container_name: reddit-streamer
-    # depends_on:
-    #   - create-reddit-topic
-    #   - broker
-    #   - spark-master
-    #   - spark-worker
     depends_on:
-      broker:
-        condition: service_healthy
-      spark-master:
-        condition: service_healthy
-      spark-worker:
-        condition: service_healthy
-    healthcheck:
-      disable: true
+      - broker
+      - spark-master
+      - spark-worker
+    # depends_on:
+    #   broker:
+    #     condition: service_healthy
+    #   spark-master:
+    #     condition: service_healthy
+    #   spark-worker:
+    #     condition: service_healthy
+    # healthcheck:
+    #   disable: true
 
     restart: "on-failure:3"
     networks:
