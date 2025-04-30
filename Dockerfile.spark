@@ -3,9 +3,8 @@ USER root
 
 # copy and install Python deps
 COPY streaming_requirements.txt /app/
-RUN apt-get update \
- && apt-get install -y openjdk-11-jre-headless \
- && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --upgrade pip \
+ && pip3 install -r /app/streaming_requirements.txt
 
 COPY pyspark_streaming.py /app/
 WORKDIR /app
