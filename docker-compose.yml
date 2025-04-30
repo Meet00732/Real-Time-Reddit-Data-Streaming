@@ -311,7 +311,8 @@ services:
     # healthcheck:
     #   disable: true
 
-    restart: "on-failure:3"
+    # restart: "on-failure:3"
+    restart: always
     networks:
       - airflow-network
     command: ["python3", "pyspark_streaming.py"]

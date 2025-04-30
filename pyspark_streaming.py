@@ -90,8 +90,7 @@ if __name__ == "__main__":
             .format("json")
             .option("path", OUTPUT_PATH)
             .option("checkpointLocation", CHECKPOINT)
-            .partitionBy("date")
-            .trigger(once=True)           # ← process available data, then stop
+            .partitionBy("date")           # ← process available data, then stop
             .outputMode("append")
             .start()
     )
