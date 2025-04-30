@@ -83,29 +83,6 @@ services:
       timeout: 10s
       retries: 5
 
-  
-  create-reddit-topic:
-    image: confluentinc/cp-server:7.4.0
-    depends_on:
-      broker:
-        condition: service_healthy
-    restart: "no"
-    entrypoint:
-      - bash
-      - -c
-      - |
-        kafka-topics \
-          --bootstrap-server broker:29092 \
-          --create \
-          --if-not-exists \
-          --topic reddit_data_created \
-          --partitions 1 \
-          --replication-factor 1
-        # exit so Docker sees a successful completion
-        exit 0
-    networks:
-      - airflow-network
-
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.0
@@ -328,8 +305,6 @@ services:
     depends_on:
       broker:
         condition: service_healthy
-      create-reddit-topic:
-        condition: service_completed_successfully
       spark-master:
         condition: service_healthy
       spark-worker:
