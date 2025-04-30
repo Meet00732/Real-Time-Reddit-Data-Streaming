@@ -9,6 +9,7 @@ from pyspark.sql.types import (
 )
 from confluent_kafka.admin import AdminClient
 import time
+from datetime import datetime
 
 def create_spark_connection():
     return (
@@ -94,6 +95,19 @@ def wait_for_topic(brokers: str, topic: str, interval: float = 5.0):
         print(f"⏳ Topic {topic} not yet available, retrying in {interval}s…")
         time.sleep(interval)
 
+
+def write_with_timestamp(batch_df, batch_id):
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = f"s3a://{bucket}/reddit/reddit_{ts}.csv"
+    (batch_df
+        .write
+        .mode("append")           # or "overwrite" if you prefer one file per batch
+        .option("header", "true")
+        .csv(file_path)
+    )
+    logging.info(f"Wrote batch {batch_id} to {file_path}")
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     KAFKA_BOOTSTRAP = "broker:29092"
@@ -111,10 +125,8 @@ if __name__ == "__main__":
     logging.info("Starting write to S3 at %s …", output_path)
     query = (
         selection_df.writeStream
-            .format("parquet")
-            .option("path", output_path)
-            .option("checkpointLocation", checkpoint_path)
             .outputMode("append")
+            .foreachBatch(write_with_timestamp)
             .start()
     )
     query.awaitTermination()
