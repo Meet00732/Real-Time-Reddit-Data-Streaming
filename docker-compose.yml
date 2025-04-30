@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 x-airflow-common: &airflow-common
   build:
@@ -82,6 +82,29 @@ services:
       interval: 50s
       timeout: 10s
       retries: 5
+
+  
+  create-reddit-topic:
+    image: confluentinc/cp-server:7.4.0
+    depends_on:
+      broker:
+        condition: service_healthy
+    entrypoint:
+      - bash
+      - -c
+      - |
+        kafka-topics \
+          --bootstrap-server broker:29092 \
+          --create \
+          --if-not-exists \
+          --topic reddit_data_created \
+          --partitions 1 \
+          --replication-factor 1
+        # exit so Docker sees a successful completion
+        exit 0
+    networks:
+      - airflow-network
+
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.0
@@ -296,14 +319,34 @@ services:
       context: .
       dockerfile: Dockerfile.spark
     container_name: reddit-streamer
+    # depends_on:
+    #   - create-reddit-topic
+    #   - broker
+    #   - spark-master
+    #   - spark-worker
     depends_on:
-      - broker
-      - spark-master
-      - spark-worker
+      broker:
+        condition: service_healthy
+      create-reddit-topic:
+        condition: service_completed_successfully
+      spark-master:
+        condition: service_healthy
+      spark-worker:
+        condition: service_healthy
     restart: "on-failure:3"
     networks:
       - airflow-network
-    command: ["python3", "pyspark_streaming.py"]
+    command: >
+      bash -c '
+        echo "waiting for reddit_data_created…";
+        until kafka-topics --bootstrap-server broker:29092 \
+              --describe --topic reddit_data_created &>/dev/null; do
+          sleep 5;
+        done;
+        echo "topic exists — starting Spark job";
+        exec python3 pyspark_streaming.py
+      '
+    # command: ["python3", "pyspark_streaming.py"]
 
 
 networks:
