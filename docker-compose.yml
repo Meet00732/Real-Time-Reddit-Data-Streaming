@@ -333,6 +333,9 @@ services:
         condition: service_healthy
       spark-worker:
         condition: service_healthy
+    healthcheck:
+      disable: true
+
     restart: "on-failure:3"
     networks:
       - airflow-network
