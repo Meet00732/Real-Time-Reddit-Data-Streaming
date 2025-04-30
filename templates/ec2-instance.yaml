@@ -103,7 +103,13 @@ Resources:
                   - s3:GetBucketLocation
                   - s3:ListBucket
                   - s3:ListBucketMultipartUploads
-                Resource: !Sub "arn:aws:s3:::${BucketNameParam}"
+                # import the bucket ARN (no /* suffix)
+                Resource:
+                  # arn:aws:s3:::<bucket>
+                  - !Join
+                    - ""
+                    - - "arn:aws:s3:::"
+                      - !ImportValue reddit-s3-BucketName
 
               - Sid: ObjectLevel
                 Effect: Allow
@@ -112,7 +118,12 @@ Resources:
                   - s3:GetObject
                   - s3:AbortMultipartUpload
                 Resource:
-                  - !Sub "arn:aws:s3:::${BucketNameParam}/*"
+                  # arn:aws:s3:::<bucket>/* 
+                  - !Join
+                    - ""
+                    - - "arn:aws:s3:::"
+                      - !ImportValue reddit-s3-BucketName
+                      - "/*"
 
 
   EC2InstanceProfile:
