@@ -315,17 +315,7 @@ services:
     restart: "on-failure:3"
     networks:
       - airflow-network
-    command: >
-      bash -c '
-        echo "waiting for reddit_data_created…";
-        until kafka-topics --bootstrap-server broker:29092 \
-              --describe --topic reddit_data_created &>/dev/null; do
-          sleep 5;
-        done;
-        echo "topic exists — starting Spark job";
-        exec python3 pyspark_streaming.py
-      '
-    # command: ["python3", "pyspark_streaming.py"]
+    command: ["python3", "pyspark_streaming.py"]
 
 
 networks:
