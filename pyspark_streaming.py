@@ -96,16 +96,19 @@ def wait_for_topic(brokers: str, topic: str, interval: float = 5.0):
         time.sleep(interval)
 
 
-def write_with_timestamp(batch_df, batch_id):
+def write_json_with_timestamp(batch_df, batch_id):
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = f"s3a://{bucket}/reddit/reddit_{ts}.csv"
+    path = f"s3a://{bucket}/reddit/reddit_{ts}.json"
+
+    # coalesce(1) if you want exactly one file per batch,
+    # otherwise drop it and let Spark write multiple part files.
     (batch_df
+        .coalesce(1)
         .write
-        .mode("append")           # or "overwrite" if you prefer one file per batch
-        .option("header", "true")
-        .csv(file_path)
+        .mode("append")
+        .json(path)               # ← write JSON, not CSV
     )
-    logging.info(f"Wrote batch {batch_id} to {file_path}")
+    logging.info(f"Wrote batch {batch_id} to {path}")
 
 
 if __name__ == "__main__":
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     query = (
         selection_df.writeStream
             .outputMode("append")
-            .foreachBatch(write_with_timestamp)
+            .foreachBatch(write_json_with_timestamp)
             .start()
     )
     query.awaitTermination()
