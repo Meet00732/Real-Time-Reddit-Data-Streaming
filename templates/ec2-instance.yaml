@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Networking stack for Reddit project"
+Description: "EC2 stack for Reddit project"
 
 
 Parameters:

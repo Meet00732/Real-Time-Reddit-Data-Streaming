@@ -7,6 +7,8 @@ from pyspark.sql.types import (
     StringType, ArrayType,
     DoubleType, IntegerType, FloatType
 )
+from confluent_kafka.admin import AdminClient
+import time
 
 def create_spark_connection():
     return (
@@ -81,8 +83,22 @@ def create_selection_df_from_kafka(kafka_df):
         col("data.text_length").alias("text_length"),
     )
 
+
+def wait_for_topic(brokers: str, topic: str, interval: float = 5.0):
+    admin = AdminClient({"bootstrap.servers": brokers})
+    while True:
+        md = admin.list_topics(timeout=10)
+        if topic in md.topics and md.topics[topic].error is None:
+            print(f"✅ Found topic {topic}, proceeding…")
+            return
+        print(f"⏳ Topic {topic} not yet available, retrying in {interval}s…")
+        time.sleep(interval)
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    KAFKA_BOOTSTRAP = "broker:29092"
+    REDDIT_TOPIC   = "reddit_data_created"
+    wait_for_topic(KAFKA_BOOTSTRAP, REDDIT_TOPIC, interval=5)
     spark = create_spark_connection()
     kafka_df   = connect_to_kafka(spark)
     selection_df = create_selection_df_from_kafka(kafka_df)

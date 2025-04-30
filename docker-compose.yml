@@ -89,6 +89,7 @@ services:
     depends_on:
       broker:
         condition: service_healthy
+    restart: "no"
     entrypoint:
       - bash
       - -c
@@ -360,4 +361,3 @@ volumes:
   postgres_db:
   airflow_logs:
   airflow_plugins:
-  # cassandra_data:
